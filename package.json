@@ -1,0 +1,33 @@
+{
+  "name": "tokay-resilience-platform",
+  "version": "1.0.0",
+  "description": "AI-powered resilience platform for Malaysian MSMEs - Predicts, prepares, and financially cushions businesses against shocks",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "test": "cd server && npm test && cd ../client && npm test",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": [
+    "resilience",
+    "msme",
+    "malaysia",
+    "ai",
+    "risk-management",
+    "disaster-preparedness",
+    "fintech"
+  ],
+  "author": "Tokay AI Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
