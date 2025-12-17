@@ -12,13 +12,18 @@ const { connectRedis } = require('./config/redis');
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const emergencyFundRoutes = require('./routes/emergencyFund');
+const mockPaymentRoutes = require('./routes/mockPayments');
 const userRoutes = require('./routes/users');
 const businessRoutes = require('./routes/businesses');
 const riskRoutes = require('./routes/risk');
 const alertRoutes = require('./routes/alerts');
-const emergencyFundRoutes = require('./routes/emergencyFund');
 const reportRoutes = require('./routes/reports');
 const paymentRoutes = require('./routes/payments');
+const receiptsRoutes = require('./routes/receipts');
+const languageRoutes = require('./routes/language');
+const pwaRoutes = require('./routes/pwa');
+const invoiceRoutes = require('./routes/invoices');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -71,6 +76,23 @@ app.use('/api/alerts', authMiddleware, alertRoutes);
 app.use('/api/emergency-fund', authMiddleware, emergencyFundRoutes);
 app.use('/api/reports', authMiddleware, reportRoutes);
 app.use('/api/payments', authMiddleware, paymentRoutes);
+app.use('/api/receipts', authMiddleware, receiptsRoutes);
+app.use('/api/invoices', authMiddleware, invoiceRoutes);
+app.use('/api/language', languageRoutes); // Public endpoint for language data
+app.use('/api/pwa', pwaRoutes); // Public endpoint for PWA features
+
+// PWA static routes (public)
+app.get('/manifest.json', (req, res) => {
+  res.redirect('/api/pwa/manifest.json');
+});
+
+app.get('/service-worker.js', (req, res) => {
+  res.redirect('/api/pwa/service-worker.js');
+});
+
+app.get('/mobile-styles.css', (req, res) => {
+  res.redirect('/api/pwa/mobile-styles.css');
+});
 
 // Socket.IO for real-time alerts
 io.on('connection', (socket) => {
