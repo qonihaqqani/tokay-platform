@@ -1,7 +1,7 @@
 {
-  "name": "tokay-resilience-platform",
-  "version": "1.0.0",
-  "description": "AI-powered resilience platform for Malaysian MSMEs - Predicts, prepares, and financially cushions businesses against shocks",
+  "name": "tokay-platform",
+  "version": "2.0.0",
+  "description": "🦎 COMPLETE AI-Powered Business Intelligence Platform for Malaysian MSMEs - Advanced Sales Analytics, AI Insights, Quick Sale Mode & Business Tools",
   "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
@@ -10,16 +10,25 @@
     "build": "cd client && npm run build",
     "start": "cd server && npm start",
     "test": "cd server && npm test && cd ../client && npm test",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "demo:verify": "echo 'Open http://localhost:3000/demo-verification after starting dev server'",
+    "demo:setup": "npm run install:all && echo 'Run npm run dev and visit http://localhost:3000/demo-verification'",
+    "demo:pitch": "echo 'See DEMO_PITCH_SCRIPT.md for 5-7 minute demo instructions'"
   },
   "keywords": [
-    "resilience",
+    "business-intelligence",
+    "sales-analytics",
+    "ai-insights",
+    "quick-sale",
     "msme",
     "malaysia",
-    "ai",
+    "fintech",
+    "resilience",
     "risk-management",
-    "disaster-preparedness",
-    "fintech"
+    "e-invoicing",
+    "customer-segmentation",
+    "profit-analysis",
+    "combo-recommendations"
   ],
   "author": "Tokay AI Team",
   "license": "MIT",

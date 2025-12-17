@@ -21,6 +21,10 @@ import WeatherMonitor from './components/WeatherMonitor';
 import PaymentIntegration from './components/PaymentIntegration';
 import ReceiptUpload from './components/ReceiptUpload';
 import EInvoice from './components/EInvoice';
+import QuickSale from './components/QuickSale';
+import AdvancedAnalytics from './components/AdvancedAnalytics';
+import AIInsights from './components/AIInsights';
+import DemoVerification from './components/DemoVerification';
 
 // Import contexts
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -182,6 +186,38 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <EInvoice />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/quick-sale" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <QuickSale />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/advanced-analytics" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <AdvancedAnalytics />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/ai-insights" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <AIInsights />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/demo-verification" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <DemoVerification />
                 </AppLayout>
               </ProtectedRoute>
             } />

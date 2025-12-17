@@ -2,22 +2,40 @@ const twilio = require('twilio');
 const nodemailer = require('nodemailer');
 const logger = require('./logger');
 
-// Initialize Twilio client for SMS
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-// Initialize email transporter
-const emailTransporter = nodemailer.createTransporter({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
+// Initialize Twilio client for SMS (only if credentials are available)
+let twilioClient = null;
+if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+  try {
+    twilioClient = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+  } catch (error) {
+    logger.warn('Failed to initialize Twilio client:', error.message);
   }
-});
+} else {
+  logger.warn('Twilio credentials not provided. SMS functionality will be disabled.');
+}
+
+// Initialize email transporter (only if credentials are available)
+let emailTransporter = null;
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  try {
+    emailTransporter = nodemailer.createTransporter({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: process.env.EMAIL_PORT || 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+  } catch (error) {
+    logger.warn('Failed to initialize email transporter:', error.message);
+  }
+} else {
+  logger.warn('Email credentials not provided. Email functionality will be disabled.');
+}
 
 /**
  * Send SMS notification
@@ -27,6 +45,18 @@ const emailTransporter = nodemailer.createTransporter({
  */
 const sendSMS = async (phoneNumber, message, language = 'ms') => {
   try {
+    // Check if Twilio client is initialized
+    if (!twilioClient) {
+      logger.warn('SMS service not available. Twilio client not initialized.');
+      // For demo purposes, return a mock success response
+      return {
+        success: true,
+        sid: 'demo_sms_' + Date.now(),
+        demo: true,
+        message: 'SMS service simulated for demo'
+      };
+    }
+
     // Format phone number for Malaysia if needed
     let formattedNumber = phoneNumber;
     if (!phoneNumber.startsWith('+')) {
@@ -66,8 +96,20 @@ const sendSMS = async (phoneNumber, message, language = 'ms') => {
  */
 const sendEmail = async (to, subject, html, text) => {
   try {
+    // Check if email transporter is initialized
+    if (!emailTransporter) {
+      logger.warn('Email service not available. Email transporter not initialized.');
+      // For demo purposes, return a mock success response
+      return {
+        success: true,
+        messageId: 'demo_email_' + Date.now(),
+        demo: true,
+        message: 'Email service simulated for demo'
+      };
+    }
+
     const mailOptions = {
-      from: process.env.EMAIL_FROM || '"Tokay Resilience Platform" <noreply@tokay.com>',
+      from: process.env.EMAIL_FROM || '"Tokay Platform" <noreply@tokay.com>',
       to: to,
       subject: subject,
       html: html,

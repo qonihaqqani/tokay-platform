@@ -24,10 +24,11 @@ const receiptsRoutes = require('./routes/receipts');
 const languageRoutes = require('./routes/language');
 const pwaRoutes = require('./routes/pwa');
 const invoiceRoutes = require('./routes/invoices');
+const analyticsRoutes = require('./routes/analytics');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
-const authMiddleware = require('./middleware/auth');
+const { authMiddleware } = require('./middleware/auth');
 
 const app = express();
 const server = createServer(app);
@@ -78,6 +79,10 @@ app.use('/api/reports', authMiddleware, reportRoutes);
 app.use('/api/payments', authMiddleware, paymentRoutes);
 app.use('/api/receipts', authMiddleware, receiptsRoutes);
 app.use('/api/invoices', authMiddleware, invoiceRoutes);
+// Public demo routes first (no auth required)
+app.use('/api/analytics', analyticsRoutes);
+// Protected routes after
+app.use('/api/analytics', authMiddleware, analyticsRoutes);
 app.use('/api/language', languageRoutes); // Public endpoint for language data
 app.use('/api/pwa', pwaRoutes); // Public endpoint for PWA features
 

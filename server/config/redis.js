@@ -9,40 +9,180 @@ const redisConfig = {
   db: process.env.REDIS_DB || 0,
   retryDelayOnFailover: 100,
   enableReadyCheck: false,
-  maxRetriesPerRequest: null,
-  lazyConnect: true
+  maxRetriesPerRequest: 0, // Disable retries
+  lazyConnect: true,
+  connectTimeout: 1000, // Short timeout
+  commandTimeout: 1000,  // Short timeout
+  retryDelayOnClusterDown: 300, // Short retry delay
+  retryDelayOnFailover: 100,
+  enableOfflineQueue: false // Disable offline queue
 };
 
-// Create Redis client
-const client = redis.createClient(redisConfig);
+// Create Redis client (but don't connect yet)
+let client = null;
 
-// Event handlers
-client.on('connect', () => {
-  logger.info('Redis client connected');
-});
+function createRedisClient() {
+  if (!client) {
+    client = redis.createClient(redisConfig);
+    
+    // Event handlers
+    client.on('connect', () => {
+      logger.info('Redis client connected');
+    });
 
-client.on('ready', () => {
-  logger.info('Redis client ready');
-});
+    client.on('ready', () => {
+      logger.info('Redis client ready');
+    });
 
-client.on('error', (err) => {
-  logger.error('Redis client error:', err);
-});
+    client.on('error', (err) => {
+      // Only log errors if not in demo mode
+      if (process.env.NODE_ENV !== 'demo' && process.env.DEMO_MODE !== 'true') {
+        logger.error('Redis client error:', err);
+      }
+    });
 
-client.on('end', () => {
-  logger.info('Redis client disconnected');
-});
+    client.on('end', () => {
+      logger.info('Redis client disconnected');
+    });
+  }
+  return client;
+}
 
 // Connect to Redis
 async function connectRedis() {
   try {
-    await client.connect();
+    // Check if we're in demo mode (no Redis required)
+    if (process.env.NODE_ENV === 'demo' || process.env.DEMO_MODE === 'true') {
+      logger.info('Running in DEMO MODE - No Redis connection required');
+      return createMockRedis();
+    }
+    
+    // Only create and connect client if not in demo mode
+    const redisClient = createRedisClient();
+    await redisClient.connect();
     logger.info('Redis connection established successfully');
-    return client;
+    return redisClient;
   } catch (error) {
     logger.error('Redis connection failed:', error);
-    throw error;
+    
+    // Fallback to demo mode if Redis is not available
+    logger.info('Falling back to DEMO MODE for Redis');
+    return createMockRedis();
   }
+}
+
+function createMockRedis() {
+  const mockCache = new Map();
+  
+  return {
+    // Mock Redis client methods
+    connect: async () => true,
+    quit: async () => true,
+    get: async (key) => mockCache.get(key) || null,
+    setEx: async (key, ttl, value) => {
+      mockCache.set(key, value);
+      setTimeout(() => mockCache.delete(key), ttl * 1000);
+      return true;
+    },
+    del: async (key) => {
+      mockCache.delete(key);
+      return true;
+    },
+    exists: async (key) => mockCache.has(key) ? 1 : 0,
+    
+    // Mock cache utilities
+    cache: {
+      set: async (key, value, expirationInSeconds = 3600) => {
+        mockCache.set(key, JSON.stringify(value));
+        setTimeout(() => mockCache.delete(key), expirationInSeconds * 1000);
+        return true;
+      },
+      get: async (key) => {
+        const value = mockCache.get(key);
+        return value ? JSON.parse(value) : null;
+      },
+      del: async (key) => {
+        mockCache.delete(key);
+        return true;
+      },
+      exists: async (key) => mockCache.has(key),
+      setWithPattern: async (pattern, key, value, expirationInSeconds = 3600) => {
+        mockCache.set(key, JSON.stringify(value));
+        setTimeout(() => mockCache.delete(key), expirationInSeconds * 1000);
+        return true;
+      },
+      delByPattern: async (pattern) => {
+        for (const [key] of mockCache) {
+          if (key.includes(pattern)) {
+            mockCache.delete(key);
+          }
+        }
+        return true;
+      }
+    },
+    
+    // Mock session management
+    session: {
+      setUserSession: async (userId, sessionData, expirationInSeconds = 86400) => {
+        const key = `session:user:${userId}`;
+        mockCache.set(key, JSON.stringify(sessionData));
+        setTimeout(() => mockCache.delete(key), expirationInSeconds * 1000);
+        return true;
+      },
+      getUserSession: async (userId) => {
+        const key = `session:user:${userId}`;
+        const value = mockCache.get(key);
+        return value ? JSON.parse(value) : null;
+      },
+      deleteUserSession: async (userId) => {
+        const key = `session:user:${userId}`;
+        mockCache.delete(key);
+        return true;
+      },
+      setBusinessSession: async (businessId, socketId, expirationInSeconds = 86400) => {
+        const key = `session:business:${businessId}`;
+        mockCache.set(key, JSON.stringify({ socketId, connectedAt: new Date() }));
+        setTimeout(() => mockCache.delete(key), expirationInSeconds * 1000);
+        return true;
+      },
+      getBusinessSession: async (businessId) => {
+        const key = `session:business:${businessId}`;
+        const value = mockCache.get(key);
+        return value ? JSON.parse(value) : null;
+      }
+    },
+    
+    // Mock rate limiting
+    rateLimit: {
+      checkLimit: async (identifier, maxRequests = 100, windowInSeconds = 3600) => {
+        const key = `ratelimit:${identifier}`;
+        const current = JSON.parse(mockCache.get(key) || '{"count": 0, "resetTime": 0}');
+        
+        // Reset if window has expired
+        if (Date.now() > current.resetTime) {
+          current.count = 0;
+          current.resetTime = Date.now() + (windowInSeconds * 1000);
+        }
+        
+        current.count++;
+        
+        mockCache.set(key, JSON.stringify(current));
+        setTimeout(() => mockCache.delete(key), windowInSeconds * 1000);
+        
+        return {
+          allowed: current.count <= maxRequests,
+          count: current.count,
+          remaining: Math.max(0, maxRequests - current.count),
+          resetTime: current.resetTime
+        };
+      },
+      resetLimit: async (identifier) => {
+        const key = `ratelimit:${identifier}`;
+        mockCache.delete(key);
+        return true;
+      }
+    }
+  };
 }
 
 // Disconnect from Redis

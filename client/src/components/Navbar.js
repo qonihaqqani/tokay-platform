@@ -30,7 +30,11 @@ import {
   Payment,
   Analytics,
   Cloud,
-  Language
+  Language,
+  Speed,
+  TrendingUp,
+  Lightbulb,
+  Restaurant
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,13 +53,16 @@ const Navbar = () => {
 
   const menuItems = [
     { text: t('dashboard'), icon: <Dashboard />, path: '/dashboard' },
+    { text: '🏪 Quick Sale', icon: <Speed />, path: '/quick-sale', badge: 'NEW' },
+    { text: '📊 Advanced Analytics', icon: <TrendingUp />, path: '/advanced-analytics', badge: 'AI' },
+    { text: '🤖 AI Insights', icon: <Lightbulb />, path: '/ai-insights', badge: 'SMART' },
+    { text: t('e_invoicing'), icon: <Receipt />, path: '/e-invoicing' },
     { text: t('risk_assessment'), icon: <Assessment />, path: '/risk-assessment' },
     { text: t('emergency_fund'), icon: <AccountBalance />, path: '/emergency-fund' },
     { text: t('alerts'), icon: <Notifications />, path: '/alerts' },
     { text: t('reports'), icon: <Description />, path: '/reports' },
     { text: t('analytics'), icon: <Analytics />, path: '/analytics' },
     { text: t('weather_monitor'), icon: <Cloud />, path: '/weather-monitor' },
-    { text: t('e_invoicing'), icon: <Receipt />, path: '/e-invoicing' },
     { text: t('receipt_upload'), icon: <CloudUpload />, path: '/receipt-upload' },
     { text: t('payments'), icon: <Payment />, path: '/payments' }
   ];
@@ -104,7 +111,26 @@ const Navbar = () => {
             <ListItemIcon sx={{ color: 'inherit' }}>
               {item.icon}
             </ListItemIcon>
-            <ListItemText primary={item.text} />
+            <ListItemText
+              primary={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  {item.text}
+                  {item.badge && (
+                    <Chip
+                      label={item.badge}
+                      size="small"
+                      color="secondary"
+                      sx={{
+                        height: 20,
+                        fontSize: '0.6rem',
+                        fontWeight: 'bold',
+                        '& .MuiChip-label': { px: 0.5 }
+                      }}
+                    />
+                  )}
+                </Box>
+              }
+            />
           </ListItem>
         ))}
       </List>
@@ -141,8 +167,8 @@ const Navbar = () => {
           </Typography>
 
           {!isMobile && (
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              {menuItems.slice(0, 5).map((item) => (
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              {menuItems.slice(0, 4).map((item) => (
                 <Button
                   key={item.path}
                   color="inherit"
@@ -153,11 +179,42 @@ const Navbar = () => {
                     '&:hover': {
                       backgroundColor: 'rgba(255,255,255,0.2)',
                     },
+                    position: 'relative',
                   }}
                 >
                   {item.text}
+                  {item.badge && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: -5,
+                        right: -5,
+                        bgcolor: 'secondary.main',
+                        color: 'white',
+                        fontSize: '0.6rem',
+                        fontWeight: 'bold',
+                        px: 0.5,
+                        borderRadius: 1,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {item.badge}
+                    </Box>
+                  )}
                 </Button>
               ))}
+              <Button
+                color="inherit"
+                onClick={() => setMobileDrawerOpen(true)}
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                  },
+                }}
+              >
+                More ▼
+              </Button>
             </Box>
           )}
 

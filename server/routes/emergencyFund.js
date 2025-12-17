@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const auth = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
 
 // Get user's emergency fund details
-router.get('/', auth, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     
@@ -49,7 +49,7 @@ router.get('/', auth, async (req, res) => {
 
 // Update emergency fund contribution
 router.put('/contribution', [
-  auth,
+  authMiddleware,
   body('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
   body('frequency').isIn(['daily', 'weekly', 'monthly']).withMessage('Invalid frequency')
 ], async (req, res) => {
@@ -91,7 +91,7 @@ router.put('/contribution', [
 
 // Add manual contribution to emergency fund
 router.post('/contribute', [
-  auth,
+  authMiddleware,
   body('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
   body('payment_method').isIn(['fpx', 'tng', 'grabpay', 'credit_card', 'bank_transfer']).withMessage('Invalid payment method')
 ], async (req, res) => {
@@ -152,7 +152,7 @@ router.post('/contribute', [
 
 // Request emergency fund withdrawal
 router.post('/withdraw', [
-  auth,
+  authMiddleware,
   body('amount').isFloat({ min: 1 }).withMessage('Amount must be greater than 0'),
   body('reason').isLength({ min: 10 }).withMessage('Reason must be at least 10 characters')
 ], async (req, res) => {
@@ -206,7 +206,7 @@ router.post('/withdraw', [
 });
 
 // Get transaction history
-router.get('/transactions', auth, async (req, res) => {
+router.get('/transactions', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     const { limit = 50, offset = 0 } = req.query;
@@ -231,7 +231,7 @@ router.get('/transactions', auth, async (req, res) => {
 });
 
 // Get emergency fund recommendations
-router.get('/recommendations', auth, async (req, res) => {
+router.get('/recommendations', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
 
